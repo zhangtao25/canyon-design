@@ -1,39 +1,38 @@
 ```mermaid
 erDiagram
-    coverage[Coverage] {
+    COVERAGE ||--|{ SUMMARY : agg
+    COVERAGE {
         string projectID
         string sha
         string branch
         Int reporter
     }
-    summary["Summary"] {
+    SUMMARY {
         string coverageID
         string metricType
     }
-    user["User"] {
+    USER ||--|{ COVERAGE : reporter
+    USER {
         Int id
         string username
     }
-    project["Project"] {
+    PROJECT ||--|{ COVERAGE : belongs
+    PROJECT {
         string id
         string pathWithNamespace
     }
-    codechange["Codechange"] {
+    CODECHANGE }|--|| COVERAGE : newlines
+    CODECHANGE {
         string projectID
         string sha
         string compareTarget
         int[] additions
         int[] deletions
     }
-    coveragedata[CoverageData] {
+    COVERAGE ||--|| COVERAGEDATA : meta
+    COVERAGEDATA {
         string coverageID
         string coverage
     }
-    
-    coverage ||--|| coveragedata : meta
-    coverage ||--|{ summary : agg
-    coverage ||--|{ codechange : newlines
-    coverage }|--|| project : belongs
-    coverage }|--|| user : reporter
-    project ||--|{ codechange : gitlab
+    PROJECT ||--|{ CODECHANGE : gitlab
 ```
