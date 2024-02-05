@@ -8,11 +8,150 @@ istanbuljs在单元测试方面已经做到非常完善，也内置在大多数�
 
 ## 一、工程代码插桩
 
-进过我们进行了大量的实验，前端工程的覆盖率插桩必须要编译时插桩，具体原因是istanbuljs提供的nyc插桩工具只能对原生js进行插桩，然而前端模版语言层出不穷，例如ts、tsx，我们需要在工程构建时进行探针插桩。进过调研，我们发现了babel-plugin-istanbul、vite-plugin-istanbul（experimental）、swc-plugin-coverage-instrument(experimental)。等类型工程的插桩解决方案。
+进过我们进行了大量的实验，前端工程的覆盖率插桩必须要编译时插桩，具体原因是istanbuljs提供的nyc插桩工具只能对原生js进行插桩，然而前端模版语言层出不穷，例如ts、tsx，我们需要在工程构建时进行探针插桩。进过调研，我们发现了[babel-plugin-istanbul](https://github.com/istanbuljs/babel-plugin-istanbul)、vite-plugin-istanbul（experimental）、swc-plugin-coverage-instrument(experimental)。等类型工程的插桩解决方案。
 
 我们还提供了babel-plugin- canyon的babel插件，可以在各种流水线内（aws，gitlab ci）读取环境变量(branch、sha)，以供后续覆盖率数据与对应的gitlab源代码关联。
 
 需要特别注意的是，代码探针的插桩会在构建产物上下文加上代码探针，会是代码整体产物增大30%，建议不要上生产环境。
+
+```js
+var cov_ac7rkuoyv = function () {
+  var path = "/Users/test/shenlvmeng/nyc-demo/src/App.js";
+  var hash = "7dec600464f484deef063d183319f809a7c25687";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/Users/shenlvmeng/nyc-demo/src/App.js",
+    statementMap: {
+      "0": {
+        start: {
+          line: 8,
+          column: 2
+        },
+        end: {
+          line: 14,
+          column: 9
+        }
+      }
+      // ...
+    },
+    fnMap: {
+      "0": {
+        name: "App",
+        decl: {
+          start: {
+            line: 7,
+            column: 9
+          },
+          end: {
+            line: 7,
+            column: 12
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 15
+          },
+          end: {
+            line: 33,
+            column: 1
+          }
+        },
+        line: 7
+      },
+      // ...
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      // ...
+    },
+    f: {
+      "0": 0,
+      // ...
+    },
+    b: {},
+    _coverageSchema: "43e27e138ebf9cfc5966b082cf9a028302ed4184",
+    hash: "7dec600464f484deef063d183319f809a7c25687"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+
+  if (coverage[path] && coverage[path].hash === hash) {
+    return coverage[path];
+  }
+
+  return coverage[path] = coverageData;
+}();
+
+var _jsxFileName = "/Users/test/shenlvmeng/nyc-demo/src/App.js";
+
+function App() {
+  cov_ac7rkuoyv.f[0]++;
+  cov_ac7rkuoyv.s[0]++;
+  Object(react__WEBPACK_IMPORTED_MODULE_0__["useEffect"])(() => {
+    cov_ac7rkuoyv.f[1]++;
+    cov_ac7rkuoyv.s[1]++;
+
+    (async () => {
+      cov_ac7rkuoyv.f[2]++;
+      cov_ac7rkuoyv.s[2]++;
+      console.log(window.__coverage__);
+      cov_ac7rkuoyv.s[3]++;
+      axios__WEBPACK_IMPORTED_MODULE_1___default.a.defaults.headers.post['Access-Control-Allow-Origin'] = '*';
+      cov_ac7rkuoyv.s[4]++;
+      axios__WEBPACK_IMPORTED_MODULE_1___default.a.post('http://localhost:4000/coverage/client', window.__coverage__);
+    })();
+  }, []);
+  cov_ac7rkuoyv.s[5]++;
+  return react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("div", {
+    className: "App",
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 16
+    },
+    __self: this
+  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("header", {
+    className: "App-header",
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 17
+    },
+    __self: this
+  }, react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("img", {
+    src: _logo_svg__WEBPACK_IMPORTED_MODULE_2___default.a,
+    className: "App-logo",
+    alt: "logo",
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 18
+    },
+    __self: this
+  }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("p", {
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 19
+    },
+    __self: this
+  }, "Edit ", react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("code", {
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 20
+    },
+    __self: this
+  }, "src/App.js"), " and save to reload."), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("a", {
+    className: "App-link",
+    href: "https://reactjs.org",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    __source: {
+      fileName: _jsxFileName,
+      lineNumber: 22
+    },
+    __self: this
+  }, "Learn React")));
+}
+```
 
 ## 二、触发器
 
