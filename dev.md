@@ -1,0 +1,3 @@
+# 开源｜Canyon：JavaScript代码覆盖率解决方案
+
+istanbuljs是当下最优秀的JavaScript覆盖率工具，但是它偏低层，只提供了代码探针插装，静态html报告生成。24年前端技术井喷式发展，istanbuljs提供的功能显得抽筋见肘。为此，我们在istanbuljs的基础上开发了一套javascript覆盖率解决方案Canyon，拥有xx，xx等特性。已在携程内部稳定运行。
