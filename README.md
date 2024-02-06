@@ -6,6 +6,8 @@ istanbuljs是当下最优秀的JavaScript覆盖率工具，但是它偏低层，
 
 下图说明了 Canyon 的架构：
 
+![](./architecture.png)
+
 ## 工程代码插桩
 
 经过我们大量的实验验证，前端工程的覆盖率插桩必须要编译时插桩，具体原因是istanbuljs提供的nyc插桩工具只能对原生js进行插桩，然而前端模版语言层出不穷，例如ts、tsx，我们需要在工程构建时进行探针插桩。进过调研，我们发现了[babel-plugin-istanbul](https://github.com/istanbuljs/babel-plugin-istanbul)、vite-plugin-istanbul（experimental）、swc-plugin-coverage-instrument(experimental)。等类型工程的插桩解决方案。
@@ -220,3 +222,9 @@ function mergeCoverage(first, second) {
 ## react native
 
 携程的主要技术栈是react native，我们与携程的平台合作，提供了标准化的模版工程修改脚本，在打包阶段修改源代码，安装好babel插件，这样就可以打出带有代码探针的包，这样，拥有UI自动化的项目就可以轻松的获取到UI自动化的覆盖率数据，一些手工测试也可以大致的统计处覆盖率数据，对于测试的有一定意义的指导
+
+
+
+## 生产环境插桩
+
+未来如果经过大量验证需要探寻出一套插桩代码上生产的方案。上生产的意义在于覆盖率数据触发者变成了真实用户，采集到的覆盖率数据更有意义，对分析代码有重大意义，例如做一些代码优化，减少无用代码，梳理代码逻辑等。
