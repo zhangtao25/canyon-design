@@ -8,13 +8,11 @@ istanbuljs是当下最优秀的JavaScript覆盖率工具，但是它偏低层，
 
 Canyon的整体技术栈完全基于nodejs（前端、后端、任务、上报器），部署非常简便，仅需要nodejs环境，也适用于云原生环境部署（docker、Kubernetes）。应用整体流程为：代码探针插桩、触发器触发探针、覆盖率数据上报、消息生成覆盖率概览、覆盖率报告呈现。应用的架构设计适用于高频、大体积覆盖率数据的上报，使用分布式部署，消息队列消费。
 
-## 代码覆盖率
+## 代码覆盖率（已完成）
 
-当你编写越来越多end-to-end测试时，你会发现自己，我还需要在编写更多的case么？想知道到底还有哪里没测到么？有没有重叠的测试？
-这个时候代码覆盖率就派上用场了，可以以在代码中插入探针，然后再end-to-end测试时
+随着你编写更多的end-to-end测试case，你会发现自己有一些疑问，我需要写更多的测试用例吗？究竟还有哪些代码没测到？用例会不会重复了？这个时候代码覆盖率就派上用场了，它的原理是在代码执行前将代码探针插入到源代码中（其实就是上下文加计数器），这样每当case执行的时候就可以触发其中的计数器.
 
-计算测试期间执行的源代码行是通过代码覆盖率完成的。代码覆盖率需要在运行源代码之前插入额外的计数器。
-此步骤称为 检测。仪器采用的代码看起来像这样
+在代码中插入代码探针的步骤称为**代码插桩**（instrument）。插桩前的代码：
 
 ```js
 // add.js
@@ -27,52 +25,31 @@ module.exports = { add }
 并解析它以查找所有函数、语句和分支，然后将计数器插入代码中。对于上面的代码，它可能看起来像这样：
 
 ```js
-// this object counts the number of times each
-// function and each statement is executed
+// 这个对象用于计算每个函数和每个语句被执行的次数
 const c = (window.__coverage__ = {
-  // "f" counts the number of times each function is called
-  // we only have a single function in the source code
-  // thus it starts with [0]
+  // "f" 记录每个函数被调用的次数
   f: [0],
-  // "s" counts the number of times each statement is called
-  // we have 3 statements and they all start with 0
+  // "s" 记录每个语句被调用的次数
+  // 我们有3个语句，它们都从0开始
   s: [0, 0, 0],
 })
 
-// the original code + increment statements
-// uses "c" alias to "window.__coverage__" object
-// the first statement defines the function,
-// let's increment it
+// 第一个语句定义了函数
 c.s[0]++
 function add(a, b) {
-  // function is called and then the 2nd statement
+  // 函数被调用后是第二个语句
   c.f[0]++
   c.s[1]++
 
   return a + b
 }
-// 3rd statement is about to be called
+// 第三个语句即将被调用
 c.s[2]++
 module.exports = { add }
+
 ```
 
-
-想象一下，我们从测试规范文件中加载上述已检测的源文件。一些计数器将立即增加！
-
-```js
-// add.cy.js
-const { add } = require('./add')
-// JavaScript engine has parsed and evaluated "add.js" source code
-// which ran some of the increment statements
-// __coverage__ has now
-// f: [0] - function "add" was NOT executed
-// s: [1, 0, 1] - first and third counters were incremented
-// but the statement inside function "add" was NOT executed
-```
-
-这个单一测试已经实现了 100% 的代码覆盖率——每个函数和每个语句都至少执行了一次。但是，在现实应用程序中，实现 100% 的代码覆盖率需要多次测试。
-
-测试完成后，可以将覆盖对象序列化并保存到磁盘，以便生成人性化的报告。收集到的覆盖范围信息还可以发送到外部服务，并在拉取请求审查期间提供帮助。
+然后再通过与源代码的结合就可以生成漂亮的覆盖率详情报告，就可以明确的知道case执行到了哪些代码。
 
 ## 代码插桩（instrumenting-code）
 
@@ -139,10 +116,15 @@ module.exports = {
 支持的提供商：
 
 
-| 提供商       | 环境变量                  |
-|-----------|-----------------------|
-| gitlab ci | nyc instrument        |
-| github ci | babel-plugin-istanbul |
+| 提供商                                                       | 环境变量              |
+| ------------------------------------------------------------ | --------------------- |
+| [Azure Pipelines](https://azure.microsoft.com/en-us/services/devops/pipelines/) | nyc instrument        |
+| [CircleCI](https://circleci.com/)                            | babel-plugin-istanbul |
+| [Drone](https://drone.io/)                                   |                       |
+| [Github Actions](https://github.com/features/actions)        |                       |
+| [GitLab CI](https://about.gitlab.com/gitlab-ci/)             |                       |
+| [Jenkins](https://jenkins.io/)                               |                       |
+| [Travis CI](https://travis-ci.org/)                          |                       |
 
 
 
