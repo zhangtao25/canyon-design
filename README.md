@@ -1,122 +1,44 @@
 # 开源 | Canyon: JavaScript代码覆盖率解决方案
 
-istanbuljs是当下最优秀的JavaScript覆盖率工具，但是它偏低层，只提供了代码探针插装，静态html报告生成的的功能。24年前端技术井喷式发展，istanbuljs提供的功能显得抽筋见肘。为此，我们在istanbuljs的基础上开发了一套JavaScript覆盖率解决方案Canyon，拥有处理高并发上报的覆盖率，实时覆盖率聚合，覆盖率报告水合展示的拥有等特性。携程机票、IBU、酒店、商旅等部门都以初具规模的使用，保证了UI自动化的提供了覆盖率数据指标的支持。
+istanbuljs是当下最优秀的JavaScript覆盖率工具，但是它偏低层，只提供了代码探针插装，静态html报告生成的的功能。2024年前端技术井喷式发展，istanbuljs提供的功能显得抽筋见肘。为此，我们在istanbuljs的基础上开发了一套JavaScript覆盖率解决方案Canyon，拥有处理高并发上报的覆盖率，实时覆盖率聚合，覆盖率报告水合展示的拥有等特性。携程机票、IBU、酒店、商旅等部门都以初具规模的使用，保证了UI自动化的提供了覆盖率数据指标的支持。
 
 ## 架构
 
 下图说明了 Canyon 的架构：
 
-![](./architecture.png)
+Canyon的整体技术栈完全基于nodejs(前端、后端、任务)，部署仅需要nodejs环境，也适用于云原生环境部署(docker、Kubernetes)。应用整体流程为：代码探针插桩、触发器触发探针、覆盖率数据上报、消息生成覆盖率概览、覆盖率报告呈现。应用的架构设计适用于高频、大体积覆盖率数据的上报，使用分布式部署，消息队列消费。
 
-## 工程代码插桩
+## 一、代码插桩
 
-经过我们大量的实验验证，前端工程的覆盖率插桩必须要编译时插桩，具体原因是istanbuljs提供的nyc插桩工具只能对原生js进行插桩，然而前端模版语言层出不穷，例如ts、tsx，我们需要在工程构建时进行探针插桩。进过调研，我们发现了[babel-plugin-istanbul](https://github.com/istanbuljs/babel-plugin-istanbul)、vite-plugin-istanbul（experimental）、swc-plugin-coverage-instrument(experimental)。等类型工程的插桩解决方案。
 
-我们还提供了babel-plugin- canyon的babel插件，可以在各种流水线内（aws，gitlab ci）读取环境变量(branch、sha)，以供后续覆盖率数据与对应的gitlab源代码关联。
+
+参考 https://github.com/cypress-io/code-coverage ！！！！从头开始写
+
+
+
+ts-loader，必须打开sourceMap
+
+sourceMap上传上去，未来开启生产插桩，减少代码探针数量
+
+
+
+
+
+经过我们大量的实验验证，前端工程的覆盖率插桩必须要编译时插桩，具体原因是istanbuljs提供的nyc插桩工具只能对原生js进行插桩，然而前端模版语言层出不穷，例如ts、tsx、vue我们需要在工程构建时进行探针插桩。进过调研，我们发现了[babel-plugin-istanbul](https://github.com/istanbuljs/babel-plugin-istanbul)、vite-plugin-istanbul（experimental）、swc-plugin-coverage-instrument(experimental)。等类型工程的插桩解决方案。
+
+我们还提供了babel-plugin-canyon的babel插件，可以在各种流水线内（aws，gitlab ci）读取环境变量(branch、sha)，以供后续覆盖率数据与对应的gitlab源代码关联。provider，提供商
 
 需要特别注意的是，代码探针的插桩会在构建产物上下文加上代码探针，会是代码整体产物增大30%，建议不要上生产环境。
 
 以下是经过代码插桩的代码
 
-```js
-//插桩前
-function add(a,b) {
-    if (a<b){
-        return a;
-    }
-    return a + b;
-}
-//插桩后
-function cov_qxoryl6wa() {
-    var path = "/Users/zhangtao/Desktop/farm-project/add.js";
-    var hash = "9a265619447962c8591309785f0f73485412db47";
-    var global = new Function("return this")();
-    var gcv = "__coverage__";
-    var coverageData = {
-        path: "/Users/zhangtao/Desktop/farm-project/add.js",
-        statementMap: {
-            "0": {start: {line: 2, column: 4}, end: {line: 4, column: 5}},
-            "1": {start: {line: 3, column: 8}, end: {line: 3, column: 17}},
-            "2": {start: {line: 5, column: 4}, end: {line: 5, column: 17}}
-        },
-        fnMap: {
-            "0": {
-                name: "add",
-                decl: {start: {line: 1, column: 9}, end: {line: 1, column: 12}},
-                loc: {start: {line: 1, column: 18}, end: {line: 6, column: 1}},
-                line: 1
-            }
-        },
-        branchMap: {
-            "0": {
-                loc: {start: {line: 2, column: 4}, end: {line: 4, column: 5}},
-                type: "if",
-                locations: [{start: {line: 2, column: 4}, end: {line: 4, column: 5}}, {
-                    start: {line: 2, column: 4},
-                    end: {line: 4, column: 5}
-                }],
-                line: 2
-            }
-        },
-        s: {"0": 0, "1": 0, "2": 0},
-        f: {"0": 0},
-        b: {"0": [0, 0]},
-        _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
-        hash: "9a265619447962c8591309785f0f73485412db47"
-    };
-    var coverage = global[gcv] || (global[gcv] = {});
-    if (!coverage[path] || coverage[path].hash !== hash) {
-        coverage[path] = coverageData;
-    }
-    var actualCoverage = coverage[path];
-    {// @ts-ignore
-        cov_qxoryl6wa = function () {
-            return actualCoverage;
-        };
-    }
-    return actualCoverage;
-}
-
-cov_qxoryl6wa();
-
-function add(a, b) {
-    cov_qxoryl6wa().f[0]++;
-    cov_qxoryl6wa().s[0]++;
-    if (a < b) {
-        cov_qxoryl6wa().b[0][0]++;
-        cov_qxoryl6wa().s[1]++;
-        return a;
-    } else {
-        cov_qxoryl6wa().b[0][1]++;
-    }
-    cov_qxoryl6wa().s[2]++;
-    return a + b;
-}
-```
+说明适配不同provider提供商
 
 ## 二、触发器
 
-当代码插桩完成以后其实已经完成了一大步，第二步即触发器（case）的选择，我们的canyon解决方案主要面对的是端到端的测试，所以可以选择 cypress.io 之类的端到端测试工具来完成覆盖率代码探针的触发。携程拥有自己的UI自动化平台，在此过程中充当触发器的角色，代码覆盖率也是用来反映UI自动化case的重要指标，我们通过录制生产环境的case，然后在flytest上进行case的调试，最后再在测试环境回放对应UI自动化。
+当代码插桩完成以后其实已经完成了一大步，第二步即触发器（case）的选择，我们的canyon解决方案主要面对的是端到端的测试，所以可以选择 cypress.io之类的端到端测试工具来完成覆盖率代码探针的触发。携程拥有自己的UI自动化平台，在此过程中充当触发器的角色，代码覆盖率也是用来反映UI自动化case的重要指标，我们通过录制生产环境的case，然后在flytest上进行case的调试，最后再在测试环境回放对应UI自动化。
 
-```js
-const playwright = require('playwright');
-
-(async () => {
-  const browser = await playwright.chromium.launch();
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  await page.goto('http://example.com');
-
-  // Access window variable
-  const windowVariable = await page.evaluate(() => window.__coverage__);
-
-  console.log(windowVariable);
-
-  await browser.close();
-})();
-```
-
-
+为了区分覆盖率的触发来源，我们引入了report id的概念。每次上报覆盖率数据时，都会带上一个 report id，这个 report id 是由系统 生成的，我们设计的本意是想让您使用它来区分自己的 case，如果您不是使用它来区分 case，我们会以 commitsha 作为report id，所有 此次 commitsha 的覆盖率数据都会往这个 report id 上累加。
 
 
 
@@ -126,88 +48,11 @@ const playwright = require('playwright');
 
 对于单页面应用我们其实比较好进行上报，因为他的对象不会销毁，但是对于一些非单页面应用，我们需要在其visiblechange的时候，监听这个事件，在这个钩子里进行覆盖率数据的上报。
 
-```js
-document.addEventListener('visibilitychange', function() {
-  if (document.visibilityState === 'visible') {
-    console.log('Page is now visible');
-  } else if (document.visibilityState === 'hidden') {
-    console.log('Page is now hidden');
-  }
-});
-```
-
 
 
 ## 四、聚合
 
 携程的UI自动化case对于一些复杂页面有非常大量的case，就Trip.com的case来说，每次基本上都有2000次的覆盖率上报，我们需要对大量的case进行分类聚合，我们还有crn的覆盖率数据，那就更大了，基本是项目体积的1/3，而且crn是单页面类型的应用，每个覆盖率都有 30m那么大，由于本人才疏学浅，无法做到实时的大批量的大数据聚合计算，于是我想到了使用消息队列的形式来慢慢消费这些数据，确保数据能在1分钟以内生成。
-
-```js
-/**
- * 合并两个相同文件的文件覆盖对象实例，确保执行计数正确。
- *
- * @method mergeFileCoverage
- * @static
- * @param {Object} first 给定文件的第一个文件覆盖对象
- * @param {Object} second 相同文件的第二个文件覆盖对象
- * @return {Object} 合并后的结果对象。请注意，输入对象不会被修改。
- */
-function mergeFileCoverage(first, second) {
-  const ret = JSON.parse(JSON.stringify(first));
-
-  delete ret.l; // 移除派生信息
-
-  Object.keys(second.s).forEach(function (k) {
-    ret.s[k] += second.s[k];
-  });
-
-  Object.keys(second.f).forEach(function (k) {
-    ret.f[k] += second.f[k];
-  });
-
-  Object.keys(second.b).forEach(function (k) {
-    const retArray = ret.b[k];
-    const secondArray = second.b[k];
-    for (let i = 0; i < retArray.length; i += 1) {
-      retArray[i] += secondArray[i];
-    }
-  });
-
-  return ret;
-}
-
-/**
- * 合并两个覆盖对象，确保执行计数正确。
- *
- * @method mergeCoverage
- * @static
- * @param {Object} first 第一个覆盖对象
- * @param {Object} second 第二个覆盖对象
- * @return {Object} 合并后的结果对象。请注意，输入对象不会被修改。
- */
-function mergeCoverage(first, second) {
-  if (!second) {
-    return first;
-  }
-
-  const mergedCoverage = JSON.parse(JSON.stringify(first)); // 深拷贝 coverage，这样修改出来的是两个的合集
-  Object.keys(second).forEach(function (filePath) {
-    const original = first[filePath];
-    const added = second[filePath];
-    let result;
-
-    if (original) {
-      result = mergeFileCoverage(original, added);
-    } else {
-      result = added;
-    }
-
-    mergedCoverage[filePath] = result;
-  });
-
-  return mergedCoverage;
-}
-```
 
 
 
@@ -228,3 +73,37 @@ function mergeCoverage(first, second) {
 ## 生产环境插桩
 
 未来如果经过大量验证需要探寻出一套插桩代码上生产的方案。上生产的意义在于覆盖率数据触发者变成了真实用户，采集到的覆盖率数据更有意义，对分析代码有重大意义，例如做一些代码优化，减少无用代码，梳理代码逻辑等。
+
+
+
+## 六、社区推广
+
+从这篇文章发表时起，我们将正式开源Canyon项目。JavaScript是时下最流行的编程语言，但是端到端测试覆盖率收集领域一直空白，我们的代码开发基于了Istanbuljs，shiki等优秀开源项目，我们有信心推出canyon开源可以赢得社区的反响，并且可以有大量js开发者参与进来。
+
+我们基于的时istanbuljs的代码插桩，对于javascript语言领域而言，istanbuljs可谓是久经沙场，如果可以投入生产实践插桩收集，将会在代码质量优化方面提供非常重要的指标参考。
+
+Canyon在未来还有很大发展空间，例如生产环境插桩收集还未验证，与playwright puppeteer cypress等自动化测试的工具还没有深度链接，这些都已经规划到了未来的开发计划中。希望在未来Canyon可以在携程及社区有更多人参与建设。
+
+
+
+## 七、参考链接
+
+**开源项目 Canyon：**
+
+https://github.com/canyon-project/canyon
+
+**JavaScript覆盖率工具：**
+
+https://github.com/istanbuljs/istanbuljs
+
+**Shiki美观而强大的语法高亮器：**
+
+https://github.com/shikijs/shiki
+
+**JavaScript 文本差异：**
+
+https://github.com/kpdecker/jsdiff
+
+**"An O(ND) Difference Algorithm and its Variations" (Myers, 1986).**
+
+http://www.xmailserver.org/diff2.pdf
