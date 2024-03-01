@@ -24,7 +24,7 @@ istanbul是久经沙场的js代码插桩黄金标准，Canyon主要为端到端�
 检查是否插桩成功，可以在编译后的产物中搜索`__coverage__`，如果有则说明插桩成功。
 
 
-![img.png](img.png)!(./img.png)
+![img_2.png](img_2.png)![img.png](img.png)!(./img.png)
 
 为了紧密关联插桩代码的源代码，我们适配了各种provider，将环境变量发送到Canyon服务端，兑换到reportID，方便覆盖率数据聚合计算完成后的覆盖率源文件的关联展示。
 
@@ -32,7 +32,7 @@ istanbul是久经沙场的js代码插桩黄金标准，Canyon主要为端到端�
 
 需要特别注意的是，代码探针的插桩会在构建产物上下文加上代码探针，会是代码整体产物增大30%，建议不要上生产环境。
 
-![img_1.png](img_1.png)
+
 
 ## 触发器（trigger）
 
