@@ -19,6 +19,23 @@ istanbul是久经沙场的js代码插桩黄金标准，Canyon主要为端到端�
 
 用户可以根据自己的工程类型选择合适的插桩方案，只需要在工程中安装对应的插件，然后就会在编译时自动插桩。
 
+以babel.config.js为例：
+
+```javascript
+
+module.exports = {
+  plugins: [
+    [
+      'babel-plugin-istanbul',
+      {
+        exclude: ['**/*.spec.js', '**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.jsx'],
+      },
+    ],
+  ],
+};
+
+```
+
 插桩完成后，代码中会插入一些代码探针，这些代码探针会在运行时收集覆盖率数据，然后上报到Canyon服务端。
 
 检查是否插桩成功，可以在编译后的产物中搜索`__coverage__`，如果有则说明插桩成功。
