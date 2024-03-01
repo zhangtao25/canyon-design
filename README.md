@@ -47,8 +47,17 @@ module.exports = {
 
 我们还提供了babel-plugin-canyon的babel插件，可以在各种流水线内（aws，gitlab ci）读取环境变量(branch、sha)，以供后续覆盖率数据与对应的gitlab源代码关联。provider，提供商
 
-需要特别注意的是，代码探针的插桩会在构建产物上下文加上代码探针，会是代码整体产物增大30%，建议不要上生产环境。
 
+支持的提供商：
+
+
+| 提供商       | 环境变量                  |
+|-----------|-----------------------|
+| gitlab ci | nyc instrument        |
+| github ci | babel-plugin-istanbul |
+
+
+需要特别注意的是，代码探针的插桩会在构建产物上下文加上代码探针，会是代码整体产物增大30%，建议不要上生产环境。
 
 
 ## 触发器（trigger）
