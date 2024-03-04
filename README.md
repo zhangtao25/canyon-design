@@ -1,14 +1,16 @@
-前言
+# 开源 | Canyon: JavaScript代码覆盖率解决方案
+
+## 前言
 
 istanbuljs是当下最优秀的JavaScript覆盖率工具，但是它偏低层，只提供了代码探针插装，静态html报告生成的的功能。
 2024年前端技术井喷式发展，istanbuljs提供的功能显得抽筋见肘。为此，我们在istanbuljs的基础上开发了一套JavaScript覆盖率解决方案Canyon，拥有处理高并发上报的覆盖率，实时覆盖率聚合，覆盖率报告水合展示的拥有等特性。携程机票、IBU、酒店、商旅等部门都以初具规模的使用，保证了UI自动化的提供了覆盖率数据指标的支持。
 
 
-## 架构
+## 简述
 
 Canyon的整体技术栈完全基于nodejs（前端、后端、任务、上报器），部署非常简便，仅需要nodejs环境，也适用于云原生环境部署（docker、Kubernetes）。应用整体流程为：代码探针插桩、触发器触发探针、覆盖率数据上报、消息生成覆盖率概览、覆盖率报告呈现。应用的架构设计适用于高频、大体积覆盖率数据的上报，使用分布式部署，消息队列消费。
 
-## 代码覆盖率（已完成）
+## 代码覆盖率
 
 随着你编写更多的end-to-end测试case，你会发现自己有一些疑问，我需要写更多的测试用例吗？究竟还有哪些代码没测到？用例会不会重复了？这个时候代码覆盖率就派上用场了，它的原理是在代码执行前将代码探针插入到源代码中（其实就是上下文加计数器），这样每当case执行的时候就可以触发其中的计数器.
 
@@ -164,11 +166,143 @@ module.exports = {
 需要特别注意的是，代码探针的插桩会在构建产物上下文加上代码探针，会是代码整体产物增大30%，建议不要上生产环境。
 
 
-## 触发器（trigger）
+## 测试用例
 
-chrome插件
+当插桩完成发布到测试环境后，我们就可以开始测试阶段了。端到端测试我们以[playwright](https://playwright.dev/)为例。
+
+```js
+import { test, expect } from '@playwright/test';
+
+test('测试累加器', async ({ page }) => {
+  await page.goto('https://canyon.demo/');
+
+  await page.getByTestId('add-btn').click();
+  
+  await expect(page.getByTestId('add-result')).toHaveText('3');
+});
+```
+
+
+
+## 上报
+
+当测试用例执行完成后，对于单页面应用(SPA)或者多页面应用而言，上报步骤是将页面window对象上的__coverage__对象上报到Canyon服务端，对于单页面应用来说，相对来说比较简单，在所有测试内容都在单页面应用内，覆盖率数据会常驻在window对象中，对于多页面应用而言，路由的跳转会导致window对象的重制，丢失coverage对象。所以这个时机是至关重要的，经过大量实践验证，我们找到了浏览器的on visible change方法
+
+
+以下是关于 `visibilitychange` 事件的浏览器兼容性报告，已移除兼容性列：
+
+| 浏览器              | 版本  |
+| ------------------- | ----- |
+| Chrome              | 62+   |
+| Edge                | 18+   |
+| Firefox             | 56+   |
+| Opera               | 49+   |
+| Safari              | 14.1+ |
+| Chrome Android      | 62+   |
+| Firefox for Android | 56+   |
+| Opera Android       | 46+   |
+| Safari on iOS       | 14.5+ |
+| Samsung Internet    | 8.0+  |
+| WebView Android     | 62+   |
+
+请注意，`visibilitychange` 事件在大多数现代浏览器中得到支持，但在一些较旧版本中可能存
+
+在浏览器可见性改变的时候上报覆盖率数据，值得一提的是，对于visibilitychange这种可能会导致重复数据上报，但是对于覆盖率统计来说，未执行到的代码多次合并来说不回影响覆盖率的具体指标数据统计。
+
+对于高并发的测试场景，建议使用case本地聚合后上报覆盖率数据的方法，这样可以极大减少Canyon服务端数据处理压力。
+
+```js
+/**
+ * 合并两个相同文件的文件覆盖对象实例，确保执行计数正确。
+ *
+ * @method mergeFileCoverage
+ * @static
+ * @param {Object} first 给定文件的第一个文件覆盖对象
+ * @param {Object} second 相同文件的第二个文件覆盖对象
+ * @return {Object} 合并后的结果对象。请注意，输入对象不会被修改。
+ */
+function mergeFileCoverage(first, second) {
+  const ret = JSON.parse(JSON.stringify(first));
+
+  delete ret.l; // 移除派生信息
+
+  Object.keys(second.s).forEach(function (k) {
+    ret.s[k] += second.s[k];
+  });
+
+  Object.keys(second.f).forEach(function (k) {
+    ret.f[k] += second.f[k];
+  });
+
+  Object.keys(second.b).forEach(function (k) {
+    const retArray = ret.b[k];
+    const secondArray = second.b[k];
+    for (let i = 0; i < retArray.length; i += 1) {
+      retArray[i] += secondArray[i];
+    }
+  });
+
+  return ret;
+}
+
+/**
+ * 合并两个覆盖对象，确保执行计数正确。
+ *
+ * @method mergeCoverage
+ * @static
+ * @param {Object} first 第一个覆盖对象
+ * @param {Object} second 第二个覆盖对象
+ * @return {Object} 合并后的结果对象。请注意，输入对象不会被修改。
+ */
+function mergeCoverage(first, second) {
+  if (!second) {
+    return first;
+  }
+
+  const mergedCoverage = JSON.parse(JSON.stringify(first)); // 深拷贝 coverage，这样修改出来的是两个的合集
+  Object.keys(second).forEach(function (filePath) {
+    const original = first[filePath];
+    const added = second[filePath];
+    let result;
+
+    if (original) {
+      result = mergeFileCoverage(original, added);
+    } else {
+      result = added;
+    }
+
+    mergedCoverage[filePath] = result;
+  });
+
+  return mergedCoverage;
+}
+
+const fs=require('fs');
+const first=fs.readFileSync('./data/first.json','utf-8');
+const second=fs.readFileSync('./data/second.json','utf-8');
+console.log(JSON.parse(first)["/builds/canyon/canyon-demo/src/pages/Home.tsx"]['s']);
+console.log(mergeCoverage(JSON.parse(first),JSON.parse(second))["/builds/canyon/canyon-demo/src/pages/Home.tsx"]['s']);
+```
+
+
+
+## 聚合
+
+端到端测试的覆盖率数据特点之一是单体数据体积大，在项目整体插桩的情况下相当于整体源代码体积的30%，并且携程Trip.com flight站点的预定页UI自动化case触发visibilitychange的次数可达到近千次，对于单条数据大且高频次的数据上报场景，很难做到实时数据聚合计算。Canyon采用消息队列的形式来消费聚合数据。并且设计成无状态服务，适用于云原生时代的容器化部署，可通过HPA弹性伸缩容来应用不同场景下的测试覆盖率上报。
+
+
 
 ## 报告
+
+对于覆盖率报告展示，我们沿用了istanbul-report的界面风格，但是由于istanbul-report只提供了静态html文件的生成，不适合现代化前端水合数据生成html的模式，为此我们参考了他的源码，使用了shiki（语法高亮器）标记源代码覆盖率，根据istanbul- report的标记方法。
+
+## 变更代码覆盖率
+
+对于变更代码覆盖率，我们统计的公式是 覆盖到的新增代码行/所有新增代码行，通过配置compareTarget来指定对比目标，再通过变更代码行的获取我们通过gitlab的接口，和jsdiff可以计算得出sha和compareTarget对比出来每个文件的变更行的行号，再通过 覆盖到的新增代码行/所有新增代码行 的公式计算。
+
+```js
+//计算代码
+```
 
 
 
