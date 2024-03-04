@@ -96,10 +96,10 @@ istanbul是久经沙场的js代码插桩黄金标准，Canyon主要为端到端�
 
 | 工程类型         | 方案                   |
 |--------------|----------------------|
-| 原生JavaScript | nyc instrument |
-| babel        | babel-plugin-istanbul |
-| swc          | swc                  |
-| vite         | vite                 |
+| vanilla javascript | [nyc](https://github.com/istanbuljs/nyc) |
+| babel        | [babel-plugin-istanbul](https://github.com/istanbuljs/babel-plugin-istanbul) |
+| vite      | [vite-plugin-istanbul](https://github.com/ifaxity/vite-plugin-istanbul) (experimental) |
+| swc      | [swc-plugin-coverage-instrument](https://github.com/kwonoj/swc-plugin-coverage-instrument) (experimental) |
 
 用户可以根据自己的工程类型选择合适的插桩方案，只需要在工程中安装对应的插件，然后就会在编译时自动插桩。
 
@@ -149,15 +149,15 @@ module.exports = {
 支持的提供商：
 
 
-| 提供商                                                       | 环境变量              |
-| ------------------------------------------------------------ | --------------------- |
-| [Azure Pipelines](https://azure.microsoft.com/en-us/services/devops/pipelines/) | nyc instrument        |
-| [CircleCI](https://circleci.com/)                            | babel-plugin-istanbul |
-| [Drone](https://drone.io/)                                   |                       |
-| [Github Actions](https://github.com/features/actions)        |                       |
-| [GitLab CI](https://about.gitlab.com/gitlab-ci/)             |                       |
-| [Jenkins](https://jenkins.io/)                               |                       |
-| [Travis CI](https://travis-ci.org/)                          |                       |
+| 提供商                                                       |
+| ------------------------------------------------------------ |
+| [Azure Pipelines](https://azure.microsoft.com/en-us/services/devops/pipelines/) |
+| [CircleCI](https://circleci.com/)                            |
+| [Drone](https://drone.io/)                                   |
+| [Github Actions](https://github.com/features/actions)        |
+| [GitLab CI](https://about.gitlab.com/gitlab-ci/)             |
+| [Jenkins](https://jenkins.io/)                               |
+| [Travis CI](https://travis-ci.org/)                          |
 
 
 
@@ -174,7 +174,30 @@ chrome插件
 
 ## 社区推广
 
+从这篇文章发表时起，我们将正式开源Canyon项目。JavaScript是时下最流行的编程语言，但是端到端测试覆盖率收集领域一直空白，我们的代码开发基于了Istanbuljs，shiki等优秀开源项目，我们有信心推出canyon开源可以赢得社区的反响，并且可以有大量js开发者参与进来。
 
+我们基于的时istanbuljs的代码插桩，对于javascript语言领域而言，istanbuljs可谓是久经沙场，如果可以投入生产实践插桩收集，将会在代码质量优化方面提供非常重要的指标参考。
+
+Canyon在未来还有很大发展空间，例如生产环境插桩收集还未验证，与playwright puppeteer cypress等自动化测试的工具还没有深度链接，这些都已经规划到了未来的开发计划中。希望在未来Canyon可以在携程及社区有更多人参与建设。
 
 ## 参考链接
 
+**开源项目 Canyon：**
+
+https://github.com/canyon-project/canyon
+
+**JavaScript覆盖率工具：**
+
+https://github.com/istanbuljs/istanbuljs
+
+**Shiki美观而强大的语法高亮器：**
+
+https://github.com/shikijs/shiki
+
+**JavaScript 文本差异：**
+
+https://github.com/kpdecker/jsdiff
+
+**"An O(ND) Difference Algorithm and its Variations" (Myers, 1986).**
+
+http://www.xmailserver.org/diff2.pdf
