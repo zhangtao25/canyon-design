@@ -330,6 +330,16 @@ console.log(mergeCoverage(JSON.parse(first),JSON.parse(second))["/builds/canyon/
 
 
 
+graph TD;
+    A[开始] --> B[随机选择未消费的数据];
+    B --> C[检查项目是否被锁定];
+    C -->|未被锁定| D[消费数据];
+    C -->|已被锁定| E[等待或跳过];
+    D --> F[结束];
+    E --> F;
+
+
+
 ## 报告
 
 对于覆盖率报告展示，我们沿用了istanbul-report的界面风格，但是由于istanbul-report只提供了静态html文件的生成，不适合现代化前端水合数据生成html的模式，为此我们参考了他的源码，使用了shiki（语法高亮器）标记源代码覆盖率，根据istanbul- report的标记方法。
