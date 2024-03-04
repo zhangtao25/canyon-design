@@ -177,15 +177,26 @@ module.exports = {
 当插桩完成发布到测试环境后，我们就可以开始测试阶段了。端到端测试我们以[playwright](https://playwright.dev/)为例。
 
 ```js
-import { test, expect } from '@playwright/test';
+const {chromium} = require('playwright');
+const main = async () => {
+  const browser = await chromium.launch()
+  const page = await browser.newPage();
+  // 进入被测页面
+  await page.goto('http://test.com')
+  // 执行测试用例
+  // 用例1
+  await page.click('button')
+  // 用例2
+  await page.fill('input', 'test')
+  // 用例3
+  await page.click('text=submit')
+  const coverage = await page.evaluate(`window.__coverage__`)
+  console.log(coverage)
+  browser.close()
+}
 
-test('测试累加器', async ({ page }) => {
-  await page.goto('https://canyon.demo/');
+main()
 
-  await page.getByTestId('add-btn').click();
-  
-  await expect(page.getByTestId('add-result')).toHaveText('3');
-});
 ```
 
 
@@ -194,22 +205,9 @@ test('测试累加器', async ({ page }) => {
 
 当测试用例执行完成后，对于单页面应用(SPA)或者多页面应用而言，上报步骤是将页面window对象上的__coverage__对象上报到Canyon服务端，对于单页面应用来说，相对来说比较简单，在所有测试内容都在单页面应用内，覆盖率数据会常驻在window对象中，对于多页面应用而言，路由的跳转会导致window对象的重制，丢失coverage对象。所以这个时机是至关重要的，经过大量实践验证，我们找到了浏览器的on visible change方法
 
-
 以下是关于 `visibilitychange` 事件的浏览器兼容性报告，已移除兼容性列：
 
-| 浏览器              | 版本  |
-| ------------------- | ----- |
-| Chrome              | 62+   |
-| Edge                | 18+   |
-| Firefox             | 56+   |
-| Opera               | 49+   |
-| Safari              | 14.1+ |
-| Chrome Android      | 62+   |
-| Firefox for Android | 56+   |
-| Opera Android       | 46+   |
-| Safari on iOS       | 14.5+ |
-| Samsung Internet    | 8.0+  |
-| WebView Android     | 62+   |
+
 
 请注意，`visibilitychange` 事件在大多数现代浏览器中得到支持，但在一些较旧版本中可能存
 
@@ -292,51 +290,29 @@ console.log(mergeCoverage(JSON.parse(first),JSON.parse(second))["/builds/canyon/
 
 
 
-## 聚合
+合并完以后，再playwright里构建fetch请求发送数据
 
-端到端测试的覆盖率数据特点之一是单体数据体积大，在项目整体插桩的情况下相当于整体源代码体积的30%，并且携程Trip.com flight站点的预定页UI自动化case触发visibilitychange的次数可达到近千次，对于单条数据大且高频次的数据上报场景，很难做到实时数据聚合计算。Canyon采用消息队列的形式来消费聚合数据。并且设计成无状态服务，适用于云原生时代的容器化部署，可通过HPA弹性伸缩容来应用不同场景下的测试覆盖率上报。
-
-
-
-消息队列消费
-
-```markdown
-  +--------------+          +---------------+          +--------------+
-  |    Client    |          |    Message    |          |    Worker    |
-  +--------------+          +---------------+          +--------------+
-        |                          |                          |
-        |       Request Lock       |                          |
-        +------------------------->|                          |
-        |                          |                          |
-        |                          |  Request Lock            |
-        |                          +------------------------->|
-        |                          |                          |
-        |                          |      Acquire Lock        |
-        |                          +------------------------->|
-        |                          |                          |
-        |                          |     Process Task          |
-        |                          |<-------------------------+
-        |                          |                          |
-        |       Release Lock       |                          |
-        +------------------------->|                          |
-        |                          |                          |
-        |                          |      Release Lock        |
-        |                          +------------------------->|
-        |                          |                          |
-
+```js
+fetch
 ```
 
 
 
 
 
-graph TD;
-    A[开始] --> B[随机选择未消费的数据];
-    B --> C[检查项目是否被锁定];
-    C -->|未被锁定| D[消费数据];
-    C -->|已被锁定| E[等待或跳过];
-    D --> F[结束];
-    E --> F;
+## 聚合
+
+端到端测试的覆盖率数据特点之一是单体数据体积大，在项目整体插桩的情况下相当于整体源代码体积的30%，并且携程Trip.com flight站点的预定页UI自动化case触发visibilitychange的次数可达到近千次，对于单条数据大且高频次的数据上报场景，很难做到实时数据聚合计算。Canyon采用消息队列的形式来消费聚合数据。并且设计成无状态服务，适用于云原生时代的容器化部署，可通过HPA弹性伸缩容来应用不同场景下的测试覆盖率上报。
+
+
+
+消息队列随机抽取消费
+
+```sql
+SELECT * FROM coverage WHERE cov_type = 'normal' AND consumer = 1 ORDER BY random() LIMIT 1
+```
+
+加分布式锁限制消费
 
 
 
@@ -344,12 +320,56 @@ graph TD;
 
 对于覆盖率报告展示，我们沿用了istanbul-report的界面风格，但是由于istanbul-report只提供了静态html文件的生成，不适合现代化前端水合数据生成html的模式，为此我们参考了他的源码，使用了shiki（语法高亮器）标记源代码覆盖率，根据istanbul- report的标记方法。
 
+```js
+import { codeToHtml } from 'shiki';
+
+codeToHtml(code, {
+        theme: theme === 'light' ? 'light-plus' : 'tokyo-night',
+        lang: filePath.split('.').pop() as string,
+        decorations: decorationsLv2Array.map(([line, startCol, endCol]) => {
+          return {
+            start: {
+              line: line,
+              character: startCol - 1 < 0 ? 0 : startCol,
+            },
+            end: {
+              line: line,
+              character: endCol - 1 < 0 ? 0 : endCol,
+            },
+            properties: { class: 'highlighted-word' },
+          };
+        }),
+      })
+```
+
+
+
 ## 变更代码覆盖率
 
 对于变更代码覆盖率，我们统计的公式是 覆盖到的新增代码行/所有新增代码行，通过配置compareTarget来指定对比目标，再通过变更代码行的获取我们通过gitlab的接口，和jsdiff可以计算得出sha和compareTarget对比出来每个文件的变更行的行号，再通过 覆盖到的新增代码行/所有新增代码行 的公式计算。
 
 ```js
-//计算代码
+/**
+ * returns computed line coverage from statement coverage.
+ * This is a map of hits keyed by line number in the source.
+ */
+function getLineCoverage(statementMap:{ [key: string]: Range },s:{ [key: string]: number }) {
+  const statements = s;
+  const lineMap = Object.create(null);
+
+  Object.entries(statements).forEach(([st, count]) => {
+    if (!statementMap[st]) {
+      return;
+    }
+    const { line } = statementMap[st].start;
+    const prevVal = lineMap[line];
+    if (prevVal === undefined || prevVal < count) {
+      lineMap[line] = count;
+    }
+  });
+  return lineMap;
+}
+
 ```
 
 
