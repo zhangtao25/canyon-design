@@ -22,7 +22,7 @@ function add(a, b) {
 module.exports = { add }
 ```
 
-并解析它以查找所有函数、语句和分支，然后将计数器插入代码中。对于上面的代码，它可能看起来像这样：
+插桩过程是对代码解析以查找所有函数、语句和分支，然后将计数器插入代码中。对于上面的代码，插桩完成后：
 
 ```js
 // 这个对象用于计算每个函数和每个语句被执行的次数
@@ -48,6 +48,39 @@ c.s[2]++
 module.exports = { add }
 
 ```
+
+我们希望确保文件中的每个语句和函数`add.js`都已被我们的测试至少执行一次。因此我们编写一个测试：
+
+```js
+// add.cy.js
+const { add } = require('./add')
+
+it('adds numbers', () => {
+  expect(add(2, 3)).to.equal(5)
+})
+```
+
+当测试调用时`add(2, 3)`，执行“add”函数内的计数器递增，覆盖范围对象变为：
+
+```js
+{
+  // "f" keeps count of times each function was called
+  // we only have a single function in the source code
+  // thus it starts with [0]
+  f: [1],
+  // "s" keeps count of times each statement was called
+  // we have 3 statements, and they all start with 0
+  s: [1, 1, 1]
+}
+```
+
+
+
+这个单一测试已经实现了 100% 的代码覆盖率——每个函数和每个语句都至少执行了一次。但是，在现实应用程序中，实现 100% 的代码覆盖率需要多次测试。
+
+测试完成后，可以将覆盖对象序列化并保存到磁盘，以便生成人性化的报告。收集到的覆盖范围信息还可以发送到外部服务，并在拉取请求审查期间提供帮助。
+
+
 
 然后再通过与源代码的结合就可以生成漂亮的覆盖率详情报告，就可以明确的知道case执行到了哪些代码。
 
