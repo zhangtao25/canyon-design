@@ -77,31 +77,16 @@ it('adds numbers', () => {
 
 ```js
 {
-  // "f" keeps count of times each function was called
-  // we only have a single function in the source code
-  // thus it starts with [0]
   f: [1],
-  // "s" keeps count of times each statement was called
-  // we have 3 statements, and they all start with 0
   s: [1, 1, 1]
 }
 ```
 
-
-
-这个单一测试已经实现了 100% 的代码覆盖率——每个函数和每个语句都至少执行了一次。但是，在现实应用程序中，实现 100% 的代码覆盖率需要多次测试。
-
-测试完成后，可以将覆盖对象序列化并保存到磁盘，以便生成人性化的报告。收集到的覆盖范围信息还可以发送到外部服务，并在拉取请求审查期间提供帮助。
-
-
-
-然后再通过与源代码的结合就可以生成漂亮的覆盖率详情报告，就可以明确的知道case执行到了哪些代码。
+这个测试用例覆盖率达到了100%，每个函数和每个语句都至少执行了一次。但是在实际应用中，要达到100%的代码覆盖率需要多次测试。
 
 ## 代码插桩（instrumenting-code）
 
-简单介绍一下插桩原理
-
-istanbul是久经沙场的js代码插桩黄金标准，Canyon主要为端到端测试提供解决方案，经过大量的实验验证，现代化前端工程的覆盖率插桩必须要编译时插桩。具体原因是istanbuljs提供的nyc插桩工具只能对原生js进行插桩，然而前端模版语法层出不穷，例如ts、tsx、vue，虽然nyc也可以插桩，但是结构实践证明直接插桩的覆盖率效果不尽人意，无法精确到该插桩到的函数、语句、分支。幸运的是经过调研，我们发现了[babel-plugin-istanbul](https://github.com/istanbuljs/babel-plugin-istanbul)、vite-plugin-istanbul（experimental）、swc-plugin-coverage-instrument(experimental)。等类型工程的插桩解决方案。这些方案无一例外都是在前端工程编译阶段在将代码分析成ast抽象语法树的时候在适当时机进行插桩方法调用，更精确的插桩到的函数、语句、分支。
+istanbuljs 是久经沙场的js代码插桩黄金标准，Canyon主要为端到端测试提供解决方案，经过大量的实验验证，现代化前端工程的覆盖率插桩必须要编译时插桩。具体原因是istanbuljs提供的nyc插桩工具只能对原生js进行插桩，然而前端模版语法层出不穷，例如ts、tsx、vue，虽然nyc也可以插桩，但是结构实践证明直接插桩的覆盖率效果不尽人意，无法精确到该插桩到的函数、语句、分支。幸运的是经过调研，我们发现了[babel-plugin-istanbul](https://github.com/istanbuljs/babel-plugin-istanbul)、vite-plugin-istanbul（experimental）、swc-plugin-coverage-instrument(experimental)。等类型工程的插桩解决方案。这些方案无一例外都是在前端工程编译阶段在将代码分析成ast抽象语法树的时候在适当时机进行插桩方法调用，更精确的插桩到的函数、语句、分支。
 
 适用的工程类型：
 
@@ -210,10 +195,6 @@ main()
 
 以下是关于 `visibilitychange` 事件的浏览器兼容性报告，已移除兼容性列：
 
-
-
-请注意，`visibilitychange` 事件在大多数现代浏览器中得到支持，但在一些较旧版本中可能存
-
 在浏览器可见性改变的时候上报覆盖率数据，值得一提的是，对于visibilitychange这种可能会导致重复数据上报，但是对于覆盖率统计来说，未执行到的代码多次合并来说不回影响覆盖率的具体指标数据统计。
 
 对于高并发的测试场景，建议使用case本地聚合后上报覆盖率数据的方法，这样可以极大减少Canyon服务端数据处理压力。
@@ -251,44 +232,6 @@ function mergeFileCoverage(first, second) {
 
   return ret;
 }
-
-/**
- * 合并两个覆盖对象，确保执行计数正确。
- *
- * @method mergeCoverage
- * @static
- * @param {Object} first 第一个覆盖对象
- * @param {Object} second 第二个覆盖对象
- * @return {Object} 合并后的结果对象。请注意，输入对象不会被修改。
- */
-function mergeCoverage(first, second) {
-  if (!second) {
-    return first;
-  }
-
-  const mergedCoverage = JSON.parse(JSON.stringify(first)); // 深拷贝 coverage，这样修改出来的是两个的合集
-  Object.keys(second).forEach(function (filePath) {
-    const original = first[filePath];
-    const added = second[filePath];
-    let result;
-
-    if (original) {
-      result = mergeFileCoverage(original, added);
-    } else {
-      result = added;
-    }
-
-    mergedCoverage[filePath] = result;
-  });
-
-  return mergedCoverage;
-}
-
-const fs=require('fs');
-const first=fs.readFileSync('./data/first.json','utf-8');
-const second=fs.readFileSync('./data/second.json','utf-8');
-console.log(JSON.parse(first)["/builds/canyon/canyon-demo/src/pages/Home.tsx"]['s']);
-console.log(mergeCoverage(JSON.parse(first),JSON.parse(second))["/builds/canyon/canyon-demo/src/pages/Home.tsx"]['s']);
 ```
 
 
@@ -300,8 +243,11 @@ fetch
 ```
 
 
+上报时机
 
+Chrome 浏览器引入的新 JavaScript API——fetchLater ()，可在用户关闭页面或导航至其他页面时安全发送网络请求。
 
+> 注：fetchLater() 已在 Chrome 中提供，用于在版本 121（2024 年 1 月发布）开始的原始试验中供真实用户测试，该试验将持续到 Chrome 126（2024 年 7 月）。
 
 ## 聚合
 
