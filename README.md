@@ -162,11 +162,9 @@ module.exports = {
 
 ## 测试与上报
 
-当插桩完成发布到测试环境后，我们就可以进行端到端测试了，拿playwrite举例，对于插桩成功的前端应用站点，他们的window对象上面都会挂载__coverage__和canyon对象，我们需要对在playwright测试工具中，在测试用例执行过程中
+当插桩完成发布到测试环境后，我们就可以进行测试了。拿playwright举例，对于插桩成功的前端应用站点，window对象上面都会挂载__coverage__和__canyon__对象，我们需要在playwright测试过程中收集并上报这些数据到canyon的服务端。
 
-
-
-，我们就可以开始测试阶段了。端到端测试我们以[playwright](https://playwright.dev/)为例。
+[playwright](https://playwright.dev/)示例：
 
 ```js
 const {chromium} = require('playwright');
@@ -183,7 +181,8 @@ const main = async () => {
   // 用例3
   await page.click('text=submit')
   const coverage = await page.evaluate(`window.__coverage__`)
-  console.log(coverage)
+  // 收集上报覆盖率
+  upload(coverage)
   browser.close()
 }
 
@@ -191,14 +190,21 @@ main()
 
 ```
 
+### 单页面（SPA）与多页面（MPA）
+
 当测试用例执行完成后，对于单页面应用(SPA)或者多页面应用而言，上报步骤是将页面window对象上的__coverage__对象上报到Canyon服务端，对于单页面应用来说，相对来说比较简单，在所有测试内容都在单页面应用内，覆盖率数据会常驻在window对象中，对于多页面应用而言，路由的跳转会导致window对象的重制，丢失coverage对象。所以这个时机是至关重要的，经过大量实践验证，我们找到了浏览器的on visible change方法
 
+### visibilitychange
+
 在浏览器可见性改变的时候上报覆盖率数据，值得一提的是，对于visibilitychange这种可能会导致重复数据上报，但是对于覆盖率统计来说，未执行到的代码多次合并来说不回影响覆盖率的具体指标数据统计。
+
+### fetchLater
 
 Chrome 浏览器正在积极引入一个革命性的 JavaScript API——[fetchLater()](https://developer.chrome.com/blog/fetch-later-api-origin-trial)。这个全新的 API 旨在彻底简化关闭页面时的数据发送过程，确保即使在页面关闭后或用户离开的情况下，请求也能在未来某个时刻被安全、可靠地发出。本文就来详细了解这个超实用的全新 API。
 
 > 注：fetchLater() 已在 Chrome 中提供，用于在版本 121（2024 年 1 月发布）开始的原始试验中供真实用户测试，该试验将持续到 Chrome 126（2024 年 7 月）。
 
+### 本地合并
 
 对于高并发的测试场景，建议使用case本地聚合后上报覆盖率数据的方法，这样可以极大减少Canyon服务端数据处理压力。
 
