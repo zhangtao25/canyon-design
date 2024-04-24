@@ -273,7 +273,7 @@ SELECT * FROM coverage WHERE cov_type = 'normal' AND consumer = 1 ORDER BY rando
 
 ## 报告
 
-对于覆盖率报告展示，我们沿用了istanbul-report的界面风格，但是由于istanbul-report只提供了静态html文件的生成，不适合现代化前端水合数据生成html的模式，为此我们参考了他的源码，使用了shiki（语法高亮器）标记源代码覆盖率，根据istanbul- report的标记方法。
+对于覆盖率报告展示，我们沿用了istanbul-report的界面风格，但是由于istanbul-report只提供了静态html文件的生成，不适合现代化前端水合数据生成html的模式，为此我们参考了他的源码，使用了shiki（语法高亮器）标记源代码覆盖率，参考了istanbul-report的标记方法。
 
 ```js
 import { codeToHtml } from 'shiki';
@@ -297,12 +297,16 @@ codeToHtml(code, {
       })
 ```
 
+![img_2.png](./img_4.png)
 
 
 ## 变更代码覆盖率
 
-对于变更代码覆盖率，我们统计的公式是 覆盖到的新增代码行/所有新增代码行，通过配置compareTarget来指定对比目标，再通过变更代码行的获取我们通过gitlab的接口，和jsdiff可以计算得出sha和compareTarget对比出来每个文件的变更行的行号，再通过 覆盖到的新增代码行/所有新增代码行 的公式计算。
 
+
+对于变更代码覆盖率，我们统计的公式是 覆盖到的新增代码行/所有新增代码行。
+
+我们通过配置compareTarget来指定对比目标，再联合gitlab的git diff接口获取变更代码行结合覆盖率数据计算。
 ```js
 /**
  * returns computed line coverage from statement coverage.
