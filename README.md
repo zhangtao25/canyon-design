@@ -257,23 +257,18 @@ fetch
 
 ## 聚合
 
-端到端测试的覆盖率数据特点之一是单体数据体积大，在项目整体插桩的情况下相当于整体源代码体积的30%，并且携程Trip.com flight站点的预定页UI自动化case触发visibilitychange的次数可达到近千次，对于单条数据大且高频次的数据上报场景，很难做到实时数据聚合计算。Canyon采用消息队列的形式来消费聚合数据。并且设计成无状态服务，适用于云原生时代的容器化部署，可通过HPA弹性伸缩容来应用不同场景下的测试覆盖率上报。
+端到端测试的覆盖率数据特点之一是单体数据体积大，在项目整体插桩的情况下相当于整体源代码体积的30%。
 
+携程Trip.com flight站点的预定页UI自动化case上报次数每次可达2000次，每次10M数据，这样的数据量对于Canyon服务端来说是一个巨大的挑战。
 
+对于单条数据大且高频次的数据上报场景，很难做到实时数据聚合计算。 Canyon采用消息队列的形式来消费聚数据，并且设计成无状态服务，适用于云原生时代的容器化部署，可通过HPA弹性伸缩容来应用不同场景下的测试覆盖率上报。
 
-消息队列随机抽取消费
-
-```sql
-SELECT * FROM coverage WHERE cov_type = 'normal' AND consumer = 1 ORDER BY random() LIMIT 1
-```
-
-加分布式锁限制消费
 
 
 
 ## 报告
 
-对于覆盖率报告展示，我们沿用了istanbul-report的界面风格，但是由于istanbul-report只提供了静态html文件的生成，不适合现代化前端水合数据生成html的模式，为此我们参考了他的源码，使用了shiki（语法高亮器）标记源代码覆盖率，参考了istanbul-report的标记方法。
+对于覆盖率报告展示，我们沿用了istanbul-report的界面风格，但是由于istanbul-report只提供了静态html文件的生成，不适合现代化前端水合数据生成html的模式，为此我们参考了它的源码，使用了shiki（语法高亮器）标记源代码覆盖率。
 
 ```js
 import { codeToHtml } from 'shiki';
@@ -296,6 +291,8 @@ codeToHtml(code, {
         }),
       })
 ```
+
+经过着色后的效果：
 
 ![img_2.png](./img_4.png)
 
