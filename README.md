@@ -331,11 +331,9 @@ function getLineCoverage(statementMap:{ [key: string]: Range },s:{ [key: string]
 
 ## 社区推广
 
-从这篇文章发表时起，我们将正式开源Canyon项目。JavaScript是时下最流行的编程语言，但是端到端测试覆盖率收集领域一直空白，我们的代码开发基于了Istanbuljs，shiki等优秀开源项目，我们有信心推出canyon开源可以赢得社区的反响，并且可以有大量js开发者参与进来。
+从这篇文章发表时起，我们将正式开源Canyon。JavaScript是时下最流行的编程语言，但是端到端测试覆盖率收集领域一直空白，我们的代码开发基于了istanbuljs，shiki等优秀开源项目，我们有信心推出Canyon开源可以赢得社区的反响，并且可以有大量JavaScript开发者参与进来。
 
-我们基于的时istanbuljs的代码插桩，对于javascript语言领域而言，istanbuljs可谓是久经沙场，如果可以投入生产实践插桩收集，将会在代码质量优化方面提供非常重要的指标参考。
-
-Canyon在未来还有很大发展空间，例如生产环境插桩收集还未验证，与playwright puppeteer cypress等自动化测试的工具还没有深度链接，这些都已经规划到了未来的开发计划中。希望在未来Canyon可以在携程及社区有更多人参与建设。
+Canyon在未来还有很大发展空间，例如生产环境插桩收集还未有待验证尝试，与playwright、puppeteer、cypress等自动化测试的工具还没有深度链接，这些都已经规划到了未来的开发计划中。希望在未来Canyon可以在携程及社区里有更多人参与建设。
 
 ## 参考链接
 
