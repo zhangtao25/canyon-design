@@ -4,7 +4,7 @@
 
 [istanbuljs](https://github.com/istanbuljs/istanbuljs) 是一款出色的 JavaScript 代码覆盖率工具，通常用于单元测试中的代码覆盖率检测，并结合本地覆盖率数据生成静态报告。然而，随着现代前端技术的发展，特别是 UI 自动化测试的兴起，对端到端测试的代码覆盖率检测需求日益增加。这种需求包括测试执行时覆盖率高并发上报、实时覆盖率聚合以及覆盖率数据水合展示等功能。
 
-为此，我们在 istanbuljs 的基础上开发了一套全面提升 JavaScript 代码质量的覆盖率分析工具 Canyon。Canyon 不仅能够处理高并发的覆盖率上报，实时聚合，还能提供覆盖率报告的水合展示。目前，携程的机票、酒店、IBU 和商旅等部门已经开始使用 Canyon，并在持续集成流水线构建阶段插入代码，以便在 UI 自动化测试阶段收集上报覆盖率数据。最终，在 Canyon 服务端生成详尽的覆盖率报告，为 UI 自动化测试用例提供全面的覆盖率数据指标。
+为此，我们在 istanbuljs 的基础上开发了一套全面提升 JavaScript 代码质量的覆盖率分析工具 Canyon。Canyon 不仅能够处理高并发的覆盖率上报，实时聚合，还能提供覆盖率报告的水合展示。目前，携程的机票、酒店、IBU 和商旅等部门已经开始使用 Canyon，并在持续集成流水线构建阶段插入探针代码，以便在 UI 自动化测试阶段收集上报覆盖率数据。，在 Canyon 服务端生成详尽的覆盖率报告，为 UI 自动化测试用例提供全面的覆盖率数据指标。
 
 
 ## 介绍
@@ -133,10 +133,12 @@ babel.config.js
 module.exports = {
   plugins: [
     [
-      'babel-plugin-istanbul',
-      {
-        exclude: ['**/*.spec.js', '**/*.spec.ts', '**/*.spec.tsx', '**/*.spec.jsx'],
-      },
+        'babel-plugin-canyon',
+        {
+          provider: 'gitlab',
+          branch: process.env.CI_COMMIT_REF_NAME,
+          sha: process.env.CI_COMMIT_SHA,
+        },
     ],
   ],
 };
