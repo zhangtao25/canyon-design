@@ -23,7 +23,7 @@ Canyon 通过简单的 Babel 插件配置即可实现代码插装、覆盖率上
 
 架构图如下：
 
-[//]: # (![img_1.png]&#40;./img_1.png&#41;)
+![img_1.png](./architecture.png)
 
 下面我会根据以下几个部分来介绍 Canyon 的主要功能：
 
