@@ -361,11 +361,11 @@ https://github.com/canyon-project/canyon
 
 https://github.com/istanbuljs/istanbuljs
 
-**Shiki美观而强大的语法高亮器：**
+**基于浏览器的代码编辑器：**
 
 https://github.com/shikijs/shiki
 
-**JavaScript 文本差异：**
+**JavaScript文本差异：**
 
 https://github.com/kpdecker/jsdiff
 
