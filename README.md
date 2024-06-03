@@ -5,7 +5,8 @@
 [istanbuljs](https://github.com/istanbuljs/istanbuljs) 是一款优秀的JavaScript代码覆盖率工具，主要用于单元测试的代码覆盖率检测和生成本地覆盖率报告。然而，随着现代前端技术和UI自动化测试的发展，对端到端测试的代码覆盖率检测需求逐渐增加，istanbuljs提供的功能显得捉襟见肘。  
 
 携程内部JavaScript代码覆盖率使用的是gitlab内置的coverage上报，也是只支持单元测试的覆盖率收集和概览数据展示。
-携程的前端技术日益精进，有自己的前端流量录制平台，并且部署了相当大规模的模拟器集群进行UI自动化[flybirds](https://github.com/ctripcorp/flybirds)回放，但是对于端到端测试的代码覆盖率收集支持不足。
+携程的前端技术日益精进，有自己的前端流量录制平台，并且部署了相当大规模的模拟器集群进行UI自动化[flybirds](https://github.com/ctripcorp/flybirds)回放，
+这种场景下，需要对端到端测试的代码覆盖率进行收集和展示，以便开发同学更好的了解到自己的代码质量。
 
 传统的istanbuljs提供的功能已经无法满足我们的需求。我们需要处理UI自动化过程中来自前端高并发的覆盖率上报，
 实时的覆盖率聚合，以及覆盖率数据的水合展示。因此，我们在Istanbuljs的基础上开发了Canyon，
