@@ -145,7 +145,7 @@ module.exports = {
 
 为了紧密关联插桩代码的源代码，我们适配了各种provider，将环境变量发送到Canyon服务端，兑换到reportID，方便覆盖率数据聚合计算完成后的覆盖率源文件的关联展示。
 
-我们还提供了babel-plugin-canyon的babel插件，可以在各种流水线内（aws，gitlab ci）读取环境变量(branch、sha)，以供后续覆盖率数据与对应的gitlab源代码关联。provider，提供商
+我们还提供了babel-plugin-canyon的babel插件，可以在各种流水线内（aws，gitlab ci）读取环境变量(branch、sha)，以供后续覆盖率数据与对应的gitlab源代码关联。
 
 babel.config.js
 
@@ -218,7 +218,7 @@ main()
 
 - visibilitychange
 
-在浏览器可见性改变的时候上报覆盖率数据，值得一提的是，对于visibilitychange这种可能会导致重复数据上报，但是对于覆盖率统计来说，未执行到的代码多次合并来说不回影响覆盖率的具体指标数据统计。
+在浏览器可见性改变的时候上报覆盖率数据，值得一提的是，对于visibilitychange这种可能会导致重复数据上报，但是对于覆盖率统计来说，未执行到的代码多次合并来说不会影响覆盖率的具体指标数据统计。
 
 - fetchLater
 
@@ -269,12 +269,12 @@ function mergeFileCoverage(first, second) {
 
 端到端测试的覆盖率数据特点之一是单体数据体积大，在项目整体插桩的情况下相当于整体源代码体积的30%。携程Trip.com flight站点的预定页UI自动化case上报次数每次可达2000次，每次10M数据，这样的数据量对于Canyon服务端来说是一个巨大的挑战。
 
-对于单条数据大且高频次的数据上报场景，很难做到实时数据聚合计算。 Canyon采用消息队列的形式来消费聚数据，并且设计成无状态服务，适用于云原生时代的容器化部署，可通过HPA弹性伸缩容来应用不同场景下的测试覆盖率上报。
+对于单条数据大且高频次的数据上报场景，很难做到实时数据聚合计算。 Canyon采用消息队列的形式来消费数据，并且设计成无状态服务，适用于云原生时代的容器化部署，可通过HPA弹性伸缩容来应用不同场景下的测试覆盖率上报。
 
 
 ## 报告
 
-对于覆盖率报告展示，我们沿用了istanbul-report的界面风格，但是由于istanbul-report只提供了静态html文件的生成，不适合现代化前端水合数据生成html的模式，为此我们参考了它的源码，使用了shiki（语法高亮器）标记源代码覆盖率。
+对于覆盖率报告展示，我们沿用了istanbul-report的界面风格，但是由于istanbul-report只提供了静态html文件的生成，不适合现代化前端水合数据生成html的模式，为此我们参考了它的源码，使用了monaco editor标记源代码覆盖率。
 
 ```js
 import { codeToHtml } from 'shiki';
