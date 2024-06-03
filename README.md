@@ -326,7 +326,38 @@ function getLineCoverage(statementMap:{ [key: string]: Range },s:{ [key: string]
 
 ## react native 覆盖率收集方案
 
-携程的移动端技术栈主要是react native，好消息是对于我们的插桩方案一样适用，因为都是基于babel编译。并且得力于得力于公司内部的react native项目结构统一，我们将编译时插桩做到了流水线中，在流水线中分别打包“正常包”和”插桩包“，这样搭配UI自动化可以形成一套完整的录制回放覆盖率指标收集的测试体系。目前携程机票部门的APP模块均已接入Canyon，经过实践istanbuljs可以很好的对其进行插桩及覆盖率数据收集，测试团队在每次生产发布前会以Canyon的覆盖率数据指标来衡量此次发布的质量情况。
+携程的移动端技术栈主要是react native，好消息是对于我们的插桩方案一样适用，因为都是基于babel编译。并且得力于得力于公司内部的react native项目结构统一，我们将编译时插桩做到了流水线中，在流水线中分别打包“正常包”和”插桩包“，这样搭配UI自动化可以形成一套完整的录制回放覆盖率指标收集的测试体系。
+
+利用websocket暴露模拟器内覆盖率数据：
+
+```js
+// 创建WebSocket连接
+      const socket = new WebSocket('ws://localhost:8080');
+
+      // 当WebSocket连接打开时触发
+      socket.onopen = () => {
+        console.log('Connected to coverage WebSocket server');
+      };
+
+      // 当收到WebSocket消息时触发
+      socket.onmessage = event => {
+        try {
+          if (JSON.parse(event.data).type === 'getcoverage') {
+            // 发送覆盖率数据
+            socket.send(JSON.stringify(payload));
+          }
+        } catch (e) {
+          console.log(e);
+        }
+      };
+
+      // 当WebSocket连接关闭时触发
+      socket.onclose = () => {
+        console.log('Disconnected from coverage WebSocket server');
+      };
+```
+
+目前携程机票部门的APP模块均已接入Canyon，经过实践istanbuljs可以很好的对其进行插桩及覆盖率数据收集，测试团队在每次生产发布前会以Canyon的覆盖率数据指标来衡量此次发布的质量情况。
 
 ## 覆盖率提升优先级列表
 
