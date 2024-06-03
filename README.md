@@ -276,25 +276,23 @@ function mergeFileCoverage(first, second) {
 对于覆盖率报告展示，我们沿用了istanbul-report的界面风格，但是由于istanbul-report只提供了静态html文件的生成，不适合现代化前端水合数据生成html的模式，为此我们参考了它的源码，使用了monaco editor标记源代码覆盖率。
 
 ```js
-import { codeToHtml } from 'shiki';
-
-codeToHtml(code, {
-        theme: theme === 'light' ? 'light-plus' : 'tokyo-night',
-        lang: filePath.split('.').pop() as string,
-        decorations: decorationsLv2Array.map(([line, startCol, endCol]) => {
-          return {
-            start: {
-              line: line,
-              character: startCol - 1 < 0 ? 0 : startCol,
-            },
-            end: {
-              line: line,
-              character: endCol - 1 < 0 ? 0 : endCol,
-            },
-            properties: { class: 'highlighted-word' },
-          };
-        }),
-      })
+  const decorations = useMemo(() => {
+    if (data) {
+        const annotateFunctionsList = annotateFunctions(data.coverage, data.sourcecode);
+        const annotateStatementsList = annotateStatements(data.coverage);
+        return [...annotateStatementsList, ...annotateFunctionsList].map((i) => {
+            return {
+                inlineClassName: 'content-class-found',
+                startLine: i.startLine,
+                startCol: i.startCol,
+                endLine: i.endLine,
+                endCol: i.endCol,
+            };
+        });
+    } else {
+        return [];
+    }
+}, [data]);
 ```
 
 经过着色后的效果：
@@ -347,7 +345,7 @@ function getLineCoverage(statementMap:{ [key: string]: Range },s:{ [key: string]
 
 ## 社区推广
 
-从这篇文章发表时起，我们将正式开源Canyon。JavaScript是时下最流行的编程语言，但是端到端测试覆盖率收集领域一直空白，我们的代码开发基于了istanbuljs，shiki等优秀开源项目，我们有信心推出Canyon开源可以赢得社区的反响，并且可以有大量JavaScript开发者参与进来。
+从这篇文章发表时起，我们将正式开源Canyon。JavaScript是时下最流行的编程语言，但是端到端测试覆盖率收集领域一直空白，我们的代码开发基于了istanbuljs，monaco editor等优秀开源项目，我们有信心推出Canyon开源可以赢得社区的反响，并且可以有大量JavaScript开发者参与进来。
 
 Canyon在未来还有很大发展空间，例如生产环境插桩收集还未有待验证尝试，与playwright、puppeteer、cypress等自动化测试的工具还没有深度链接，这些都已经规划到了未来的开发计划中。希望在未来Canyon可以在携程及社区里有更多人参与建设。
 
