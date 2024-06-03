@@ -363,7 +363,7 @@ https://github.com/istanbuljs/istanbuljs
 
 **基于浏览器的代码编辑器：**
 
-https://github.com/shikijs/shiki
+https://github.com/microsoft/monaco-editor
 
 **JavaScript文本差异：**
 
